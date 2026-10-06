@@ -24,6 +24,14 @@ services:
       timeout: 5s
       retries: 5
 
+  minio_proxy:
+    image: alpine/socat
+    network_mode: "service:qsa_sim"
+    command: TCP-LISTEN:9000,fork,reuseaddr TCP:minio:9000
+    depends_on:
+      - qsa_sim
+      - minio
+
   createbuckets:
     image: minio/mc
     depends_on:
