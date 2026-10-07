@@ -5,42 +5,49 @@ services:
       - ${QSASIM_BIND_PORT}:${QSASIM_BIND_PORT}
     env_file:
       - .env
+    depends_on:
+      createbuckets:
+        condition: service_completed_successfully
 
-  minio:
-    image: minio/minio:latest
-    ports:
-      - ${MINIO_PORT:-9000}:9000
-      - ${MINIO_CONSOLE_PORT:-9001}:9001
-    volumes:
-      - ./.data/minio/data:/export
-      - ./.data/minio/config:/root/.minio
-    environment:
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minio}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minio123}
-    command: server /export --console-address ":9001"
-    healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  minio_proxy:
+  # qsa_sim 内の localhost:${S3_PORT} を rustfs:9000 に中継
+  s3_proxy:
     image: alpine/socat
     network_mode: "service:qsa_sim"
-    command: TCP-LISTEN:9000,fork,reuseaddr TCP:minio:9000
+    command: TCP-LISTEN:${S3_PORT:-9000},fork,reuseaddr TCP:rustfs:9000
     depends_on:
       - qsa_sim
-      - minio
+      - rustfs
+
+  rustfs:
+    image: rustfs/rustfs:latest   # 安定したらバージョン固定推奨
+    ports:
+      - ${S3_PORT:-9000}:9000
+      - ${S3_CONSOLE_PORT:-9001}:9001
+    volumes:
+      - ./.data/rustfs/data:/data
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:-rustfsadmin}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:-rustfsadmin}
+      RUSTFS_REGION: ${S3_REGION:-us-east-1}
+      RUSTFS_VOLUMES: /data
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/health/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
 
   createbuckets:
     image: minio/mc
     depends_on:
-      minio:
+      rustfs:
         condition: service_healthy
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc alias set myminio http://minio:9000 ${MINIO_ACCESS_KEY:-minio} ${MINIO_SECRET_KEY:-minio123};
-      /usr/bin/mc mb myminio/${MINIO_BUCKET_NAME:-mybucket} --ignore-existing;
-      /usr/bin/mc anonymous set public myminio/${MINIO_BUCKET_NAME:-mybucket};
-      exit 0;
+      /usr/bin/mc alias set s3 http://rustfs:9000 ${S3_ACCESS_KEY:-rustfsadmin} ${S3_SECRET_KEY:-rustfsadmin} &&
+      /usr/bin/mc mb s3/${S3_BUCKET_NAME:-mybucket} --ignore-existing &&
+      /usr/bin/mc anonymous set public s3/${S3_BUCKET_NAME:-mybucket}
       "

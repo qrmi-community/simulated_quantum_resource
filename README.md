@@ -60,11 +60,12 @@ QSASIM_IAM_APIKEY=myapikey
 QSASIM_SERVICE_CRN=myinstance
 QSASIM_BIND_PORT=8292
 PYTHONUNBUFFERED=1
-MINIO_ACCESS_KEY=myaccesskey
-MINIO_SECRET_KEY=mysecretkey
-MINIO_BUCKET_NAME=mybucket
-MINIO_PORT=9000
-MINIO_CONSOLE_PORT=9001
+S3_ACCESS_KEY=myaccesskey
+S3_SECRET_KEY=mysecretkey
+S3_BUCKET_NAME=mybucket
+S3_PORT=9000
+S3_CONSOLE_PORT=9001
+S3_REGION=us-east
 ```
 
 > [!NOTE]
@@ -76,11 +77,12 @@ MINIO_CONSOLE_PORT=9001
 | `QSASIM_SERVICE_CRN` | The `Service-CRN` value the simulator expects on incoming requests (overrides `service_crn` in `config.yaml`). Should match `QRMI_IBM_QRS_SERVICE_CRN` on the client/QRMI side. |
 | `QSASIM_BIND_PORT` | Port the API simulator listens on, and the host port it's mapped to by `docker-compose.yml`. Overrides `port` in `config.yaml`. |
 | `PYTHONUNBUFFERED` | Disables Python's stdout/stderr buffering so simulator logs appear immediately in `docker compose logs` instead of being buffered. |
-| `MINIO_ACCESS_KEY` | Access key for the MinIO S3-compatible storage used to exchange job inputs, outputs, and logs (via presigned URLs) between QRMI and the simulator. |
-| `MINIO_SECRET_KEY` | Secret key paired with `MINIO_ACCESS_KEY`. |
-| `MINIO_BUCKET_NAME` | Name of the bucket auto-created by the `createbuckets` service at startup, used to store job inputs, outputs, and logs. |
-| `MINIO_PORT` | Host port mapped to MinIO's S3 API port (container port `9000`). |
-| `MINIO_CONSOLE_PORT` | Host port mapped to the MinIO web console (container port `9001`), useful for browsing stored objects while debugging. |
+| `S3_ACCESS_KEY` | Access key for the RustFS S3-compatible storage used to exchange job inputs, outputs, and logs (via presigned URLs) between QRMI and the simulator. |
+| `S3_SECRET_KEY` | Secret key paired with `S3_ACCESS_KEY`. |
+| `S3_BUCKET_NAME` | Name of the bucket auto-created by the `createbuckets` service at startup, used to store job inputs, outputs, and logs. |
+| `S3_PORT` | Host port mapped to RustFS's S3 API port (container port `9000`). |
+| `S3_CONSOLE_PORT` | Host port mapped to the RustFS web console (container port `9001`), useful for browsing stored objects while debugging. |
+| `S3_REGION` | S3 region. `us-east-1` will be used if this variable is specified in `.env` file. |
 
 Then build and start everything:
 
@@ -89,7 +91,7 @@ docker compose up --build
 # or: podman-compose up --build
 ```
 
-Once running, the simulator's API docs are available at `http://localhost:${QSASIM_BIND_PORT}/docs` (Swagger) and `/redoc` (ReDoc), and the MinIO console at `http://localhost:${MINIO_CONSOLE_PORT}`.
+Once running, the simulator's API docs are available at `http://localhost:${QSASIM_BIND_PORT}/docs` (Swagger) and `/redoc` (ReDoc), and the RustFS console at `http://localhost:${S3_CONSOLE_PORT}`.
 
 ## Testing with Slurm
 
@@ -130,11 +132,11 @@ On each Slurm node that will run quantum jobs, define the resource in `/etc/slur
 | `QRMI_IBM_QS_IAM_ENDPOINT` | `http://<host>:${QSASIM_BIND_PORT}` | `QSASIM_BIND_PORT` (the simulator serves `/identity/token` on the same port) |
 | `QRMI_IBM_QS_IAM_APIKEY` | `myapikey` | `QSASIM_IAM_APIKEY` |
 | `QRMI_IBM_QS_SERVICE_CRN` | `myinstance` | `QSASIM_SERVICE_CRN` |
-| `QRMI_IBM_QS_AWS_ACCESS_KEY_ID` | `bbFJoygjrP5BdqnQ` | `MINIO_ACCESS_KEY` |
-| `QRMI_IBM_QS_AWS_SECRET_ACCESS_KEY` | `CAMHACH4bFlr0R2E` | `MINIO_SECRET_KEY` |
-| `QRMI_IBM_QS_S3_ENDPOINT` | `http://<host>:${MINIO_PORT}` | `MINIO_PORT` |
-| `QRMI_IBM_QS_S3_BUCKET` | `mybucket` | `MINIO_BUCKET_NAME` |
-| `QRMI_IBM_QS_S3_REGION` | `us-east` | — (MinIO doesn't enforce regions; any value works as long as it's consistent) |
+| `QRMI_IBM_QS_AWS_ACCESS_KEY_ID` | `bbFJoygjrP5BdqnQ` | `S3_ACCESS_KEY` |
+| `QRMI_IBM_QS_AWS_SECRET_ACCESS_KEY` | `CAMHACH4bFlr0R2E` | `S3_SECRET_KEY` |
+| `QRMI_IBM_QS_S3_ENDPOINT` | `http://<host>:${S3_PORT}` | `S3_PORT` |
+| `QRMI_IBM_QS_S3_BUCKET` | `mybucket` | `S3_BUCKET_NAME` |
+| `QRMI_IBM_QS_S3_REGION` | `us-east` | `S3_REGION` |
 
 ### 2. Sample workload
 
@@ -236,7 +238,7 @@ Then submit it:
 sbatch run_sampler.sh
 ```
 
-A successful run confirms the whole chain is wired correctly: Slurm accepted and scheduled the job, the SPANK plugin resolved `Simulated_brisbane` to the QRMI environment above, QRMI authenticated against `/identity/token` and fetched the backend target, the circuit was submitted and executed by the simulator, and results/logs round-tripped through MinIO.
+A successful run confirms the whole chain is wired correctly: Slurm accepted and scheduled the job, the SPANK plugin resolved `Simulated_brisbane` to the QRMI environment above, QRMI authenticated against `/identity/token` and fetched the backend target, the circuit was submitted and executed by the simulator, and results/logs round-tripped through RustFS.
 
 > [!TIP]
 > This job script and `bell_state.py` are the same code you'd run in production — to point at a real quantum resource instead of the simulator, just change `--qpu=Simulated_brisbane` to the resource name defined for it in `qrmi_config.json`.
