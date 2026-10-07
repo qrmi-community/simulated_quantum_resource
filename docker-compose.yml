@@ -9,7 +9,6 @@ services:
       createbuckets:
         condition: service_completed_successfully
 
-  # qsa_sim 内の localhost:${S3_PORT} を rustfs:9000 に中継
   s3_proxy:
     image: alpine/socat
     network_mode: "service:qsa_sim"
@@ -19,7 +18,7 @@ services:
       - rustfs
 
   rustfs:
-    image: rustfs/rustfs:latest   # 安定したらバージョン固定推奨
+    image: rustfs/rustfs:latest
     ports:
       - ${S3_PORT:-9000}:9000
       - ${S3_CONSOLE_PORT:-9001}:9001
