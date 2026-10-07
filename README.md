@@ -82,7 +82,7 @@ S3_REGION=us-east
 | `S3_BUCKET_NAME` | Name of the bucket auto-created by the `createbuckets` service at startup, used to store job inputs, outputs, and logs. |
 | `S3_PORT` | Host port mapped to RustFS's S3 API port (container port `9000`). |
 | `S3_CONSOLE_PORT` | Host port mapped to the RustFS web console (container port `9001`), useful for browsing stored objects while debugging. |
-| `S3_REGION` | S3 region. `us-east-1` will be used if this variable is specified in `.env` file. |
+| `S3_REGION` | S3 region. `us-east-1` will be used if this variable is not specified in `.env` file. |
 
 Then build and start everything:
 
