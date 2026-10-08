@@ -23,7 +23,7 @@ services:
       - ${S3_PORT:-9000}:9000
       - ${S3_CONSOLE_PORT:-9001}:9001
     volumes:
-      - ./.data/rustfs/data:/data
+      - rustfs-data:/data
     environment:
       RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:-rustfsadmin}
       RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:-rustfsadmin}
@@ -50,3 +50,6 @@ services:
       /usr/bin/rc bucket create s3/${S3_BUCKET_NAME:-mybucket} --ignore-existing &&
       /usr/bin/rc anonymous set public s3/${S3_BUCKET_NAME:-mybucket}
       "
+
+volumes:
+  rustfs-data:
