@@ -107,7 +107,7 @@ On each Slurm node that will run quantum jobs, define the resource in `/etc/slur
 
 ```json
 {
-  "name": "Simulated_brisbane",
+  "name": "fake_brisbane",
   "type": "ibm-quantum-system",
   "environment": {
     "QRMI_IBM_QS_ENDPOINT": "http://192.168.1.128:8292",
@@ -124,7 +124,7 @@ On each Slurm node that will run quantum jobs, define the resource in `/etc/slur
 ```
 
 > [!NOTE]
-> Replace `192.168.1.128` with the actual hostname/IP of the machine running `docker compose up`, reachable from your Slurm compute nodes (not `localhost`, unless the compute node *is* that machine). `name` (`Simulated_brisbane` here) is just the resource ID used with `--qpu=` on `sbatch` — it doesn't need to match a real backend name, though picking one of the simulator's built-in backends (`SimulatedBrisbane`, `SimulatedTorino`, `SimulatedCairoV2`, `SimulatedLagosV2`) keeps things intuitive.
+> Replace `192.168.1.128` with the actual hostname/IP of the machine running `docker compose up`, reachable from your Slurm compute nodes (not `localhost`, unless the compute node *is* that machine). `name` (`fake_brisbane` here) is just the resource ID used with `--qpu=` on `sbatch` — it doesn't need to match a real backend name, though picking one of the simulator's built-in backends (`fake_brisbane`, `fake_torino`, `fake_lagos`, `fake_cairo`) keeps things intuitive.
 
 | `qrmi_config.json` field | Value | Corresponds to `.env` variable |
 | --- | --- | --- |
@@ -217,7 +217,7 @@ logger.info("Finished")
 
 ### 3. Submit the job
 
-Wrap the workload in a Slurm job script that requests the Simulated resource by name via `#SBATCH --qpu=`, which the QRMI SPANK plugin picks up to select the matching entry in `qrmi_config.json`. Save this as, e.g., `run_sampler.sh`:
+Wrap the workload in a Slurm job script that requests the simulated resource by name via `#SBATCH --qpu=`, which the QRMI SPANK plugin picks up to select the matching entry in `qrmi_config.json`. Save this as, e.g., `run_sampler.sh`:
 
 ```bash
 #!/bin/bash
@@ -225,7 +225,7 @@ Wrap the workload in a Slurm job script that requests the Simulated resource by 
 #SBATCH --job-name=bell_state_example
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --qpu=Simulated_brisbane
+#SBATCH --qpu=fake_brisbane
 
 # Your script goes here
 source /shared/pyenv/bin/activate
@@ -238,10 +238,10 @@ Then submit it:
 sbatch run_sampler.sh
 ```
 
-A successful run confirms the whole chain is wired correctly: Slurm accepted and scheduled the job, the SPANK plugin resolved `Simulated_brisbane` to the QRMI environment above, QRMI authenticated against `/identity/token` and fetched the backend target, the circuit was submitted and executed by the simulator, and results/logs round-tripped through RustFS.
+A successful run confirms the whole chain is wired correctly: Slurm accepted and scheduled the job, the SPANK plugin resolved `fake_brisbane` to the QRMI environment above, QRMI authenticated against `/identity/token` and fetched the backend target, the circuit was submitted and executed by the simulator, and results/logs round-tripped through RustFS.
 
 > [!TIP]
-> This job script and `bell_state.py` are the same code you'd run in production — to point at a real quantum resource instead of the simulator, just change `--qpu=Simulated_brisbane` to the resource name defined for it in `qrmi_config.json`.
+> This job script and `bell_state.py` are the same code you'd run in production — to point at a real quantum resource instead of the simulator, just change `--qpu=fake_brisbane` to the resource name defined for it in `qrmi_config.json`.
 
 ## License
 
