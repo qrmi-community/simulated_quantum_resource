@@ -3,7 +3,7 @@ uvicorn[standard]
 httpx2
 fastapi[standard]
 qiskit-aer>=0.17.1
-qiskit_ibm_runtime>=0.40.1
+qiskit_ibm_runtime>=0.51.0
 qiskit_qasm3_import
 sympy>=1.13
 urllib3>=2.2.3
