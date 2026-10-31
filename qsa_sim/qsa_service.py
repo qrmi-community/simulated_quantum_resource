@@ -64,6 +64,7 @@ from qsa_sim.errors import (
 
 from qsa_sim.consts import DEFAULT_JOBS_DIR
 from qsa_sim.logger import UserLogger
+from qsa_sim import executor_program
 from qsa_sim.externals.standard_json_encoder import (
     StandardJSONEncoder,
 )
@@ -188,7 +189,8 @@ class QSAService:
         Args:
             executor(Executor): Thread pool executor to run the background tasks.
             include_opt_fields(bool): True if you want to include optional fields in the responses.
-            aer_options(Dict): may contain backend_options for AerSimulator ctor with "samplerV2" and "estimatorV2" keys.
+            aer_options(Dict): may contain backend_options for AerSimulator ctor with "samplerV2", "estimatorV2"
+                and "executor" keys. "executor" may also contain "simulator_options".
             multiprocess(bool): True if job will be executed in the spawned process, otherwise False(Thread).
             jobs_dir(str): Job metadata directory path
             backend(List[Dict[str, str]]): Backend list to override default.
@@ -230,6 +232,9 @@ class QSAService:
         )
         self._samplerV2_options = (
             aer_options.get("samplerV2", {}) if aer_options is not None else {}
+        )
+        self._executor_options = (
+            aer_options.get("executor", {}) if aer_options is not None else {}
         )
 
         self._mp_workers = {}
@@ -681,6 +686,24 @@ class QSAService:
                 self._executor.submit(self.execute_estimatorV2, job)
             return {"ok": True}
 
+        if program_id == "executor":
+            if self._mp_enabled is True:
+                ctx = mp.get_context("spawn")
+                process = ctx.Process(
+                    target=QSAService._run_executor_job_func,
+                    args=(
+                        job,
+                        self._executor_options,
+                        str(self._jobs_dir),
+                        self._backends_spec,
+                    ),
+                )
+                process.start()
+                self._mp_workers[job["id"]] = process
+            else:
+                self._executor.submit(self.execute_executor, job)
+            return {"ok": True}
+
         # status=Failed
         self.job_status(job, "Failed", reason_message=f"Unknown Program: {program_id}")
         return {"ok": False}
@@ -935,6 +958,115 @@ class QSAService:
                 logs_storage_type = logs["type"]
                 logs_storage = self._get_storage(logs_storage_type)
                 logs_storage.put(logs, user_logger.getvalue())
+
+    def execute_executor(self, job: Dict[str, str]) -> None:
+        """Run an ``executor`` job (Qiskit Runtime ``Executor`` / ``QuantumProgram``).
+
+        The input is the params model encoded by
+        ``QUANTUM_PROGRAM_PARAMS_CONVERTERS[version].encoder()`` on the client side, and the
+        results are written as ``QuantumProgramResultModel`` (schema v2.0) JSON.
+        """
+        user_logger = UserLogger(job["id"], job.get("log_level"))
+        storage = job["storage"]
+        try:
+            self._assert_if_inactive()
+
+            user_logger.info("Executing %s", job["id"])
+            _logger.info("Executing %s", job["id"])
+
+            backend_name = (
+                job["backend"] if "backend" in job else self.default_backend_name
+            )
+            backend = self._get_backend(backend_name)
+
+            job_params = storage["input"]
+            input_storage = self._get_storage(job_params["type"])
+            # Note: do not use RuntimeDecoder here. The input is validated by the
+            # pydantic model of the corresponding schema version.
+            executor_input = input_storage.get(job_params)
+
+            program, executor_options, schema_version = (
+                executor_program.decode_executor_params(executor_input)
+            )
+            _logger.info(
+                "Executor input: schema_version=%s, shots=%d, items=%d, semantic_role=%s",
+                schema_version,
+                program.shots,
+                len(program.items),
+                getattr(program, "_semantic_role", None),
+            )
+            # Only "classified" (0/1 bits) is supported. "kerneled"/"avg_kerneled"/"both"
+            # require IQ data (complex arrays named "<creg>_iq" / "<creg>_avg_iq"), which
+            # AerSimulator cannot produce because it does not model readout signals.
+            # run_quantum_program() ignores meas_level and always returns bool arrays, so
+            # accepting other levels would silently return results in the wrong format.
+            if program.meas_level != "classified":
+                raise ValueError(
+                    f"meas_level={program.meas_level} is not supported by the simulator. "
+                    "Only 'classified' is supported because IQ (kerneled) data cannot "
+                    "be simulated."
+                )
+
+            settings = executor_program.resolve_run_settings(
+                self._executor_options, executor_options
+            )
+            result, start, stop = executor_program.run_executor_program(
+                backend, program, settings
+            )
+            job["usage"] = {
+                "quantum_nanoseconds": executor_program.usage_nanoseconds(
+                    result, start, stop
+                )
+            }
+
+            result_json = executor_program.encode_quantum_program_result(
+                result, program, start, stop
+            )
+
+            results = storage["results"]
+            results_storage = self._get_storage(results["type"])
+            results_storage.put(results, result_json)
+
+            # status=Completed
+            self.job_status(job, "Completed", expected_prev_status="Running")
+
+            user_logger.info("Finished %s", job["id"])
+            _logger.info("Finished %s", job["id"])
+
+        except Exception as ex:  # pylint: disable=broad-exception-caught
+            _logger.exception("Executor error. job_id=%s", job["id"], exc_info=ex)
+            user_logger.exception(ex)
+            # status=Failed
+            self.job_status(job, "Failed", reason_message=str(ex), reason_code=5203)
+
+        finally:
+            logs = storage.get("logs")
+            if logs is not None:
+                # if user specifies log storage location, upload the logs.
+                logs_storage = self._get_storage(logs["type"])
+                logs_storage.put(logs, user_logger.getvalue())
+
+    @staticmethod
+    def _run_executor_job_func(
+        job: Dict[str, str],
+        options: Dict,
+        jobs_dir: str,
+        backends: list[dict[str, str]],
+    ) -> None:
+        """A function to run Executor job, invoked in the spawned process.
+
+        Args:
+            job(Dict[str, str]): Job input
+        """
+        pid = os.getpid()
+        _logger.info("Worker pid=%d started.", pid)
+
+        service = QSAService(
+            aer_options={"executor": options}, jobs_dir=jobs_dir, backends=backends
+        )
+
+        # run executor job
+        service.execute_executor(job)
 
     @staticmethod
     def _run_estimatorV2_job_func(

@@ -87,7 +87,9 @@ options.experimental = {
 ## Limitations
 
 - Results are always returned in schema `v2.0`. Clients must use `qiskit-ibm-runtime` 0.51.0 or later.
-- Only `meas_level: classified` is supported.
+- Only `meas_level: classified` is supported. `kerneled`, `avg_kerneled` and `both` return IQ data (complex arrays
+  named `<creg>_iq` / `<creg>_avg_iq`), which Aer cannot produce because it does not model readout signals.
+  Jobs with these levels fail instead of silently returning bit arrays in the wrong format.
 - `scheduler_timing` and `stretch_values` item metadata are not returned.
 - `SimulatorOptions.layer_noise_model` (noise injection at tagged boxes) cannot be configured, because it is not
   JSON-serializable.
