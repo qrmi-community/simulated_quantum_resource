@@ -20,5 +20,6 @@ jupyter notebook
 | ---- | ---- |
 | [daapi_getting_started_estimator.ipynb](./daapi_getting_started_estimator.ipynb) | EstimatorV2 job example |
 | [daapi_getting_started_estimator-parameterized_circuit.ipynb](./daapi_getting_started_estimator-parameterized_circuit.ipynb) | EstimatorV2 job example (Parameterized circuit) |
+| [daapi_getting_started_executor.ipynb](./daapi_getting_started_executor.ipynb) | Executor job example |
 | [daapi_getting_started_sampler.ipynb](./daapi_getting_started_sampler.ipynb) | SamplerV2 job example |
 | [daapi_getting_started_sampler-parameterized_circuit.ipynb](./daapi_getting_started_sampler-parameterized_circuit.ipynb) | SamplerV2 job example (Parameterized circuit) |
