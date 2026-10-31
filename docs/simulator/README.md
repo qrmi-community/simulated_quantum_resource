@@ -125,6 +125,7 @@ You can customize your installation with various parameters by editing the [conf
 | $.auth.access_token.ttl | int | TTL of access token in seconds. Default is 3600. Required when using access token-based authentication.|
 | $.aer_options.estimatorV2 | dict | Optional for EstimatorV2 runtime. Options passed to `AerSimulator` with key `backend_options` and options passed to `AerSimulator.run()` with key `run_options`. Refer [this document](./aer_configuration.md) for more details. |
 | $.aer_options.samplerV2 | dict | Optional for SamplerV2 runtime. Options passed to `AerSimulator` with key `backend_options` and options passed to `AerSimulator.run()` with key `run_options`. Refer [this document](./aer_configuration.md) for more details. |
+| $.aer_options.executor | dict | Optional for Executor runtime. Options passed to `AerSimulator` with key `backend_options` and a subset of `SimulatorOptions` (`seed_simulator`, `angle_decimals`, `warn_absent`) with key `simulator_options`. Refer [this document](./executor.md) for more details. |
 
 
 ## Logging
@@ -181,4 +182,5 @@ You will have two different API documents available if you run this API simulato
 2024-09-13 14:44:20,512 qsa_sim.qsa_service WARNING 216021 [qsa_service.py:743] Unsupported option default_option=5000 specified. Ignored.
 ```
 - For SamplerV2 jobs, [Options for V2 Sampler](https://github.com/Qiskit/ibm-quantum-schemas/blob/main/schemas/sampler_v2_schema.json#L23) are also not supported. Those properties will be ignored at job runtime with displaying warning message.
+- For Executor jobs (`program_id: executor`), refer [Executor program support](./executor.md#limitations).
 

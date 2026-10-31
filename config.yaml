@@ -25,6 +25,14 @@ service_crn: crn:v1:local:qsa_sim
 #   samplerV2:
 #     backend_options:
 #       method: "matrix_product_state"
+#
+#   executor:
+#     backend_options:
+#       method: "stabilizer"
+#     simulator_options:
+#       seed_simulator: 42
+#       angle_decimals: 5
+#       warn_absent: true
 
 auth:
   # enable or disable authentication

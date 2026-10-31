@@ -55,7 +55,7 @@ class QSABackendsTest(QSASTestBase):
 
         backend_name = self.service.default_backend_name
         circ = self._pm.run(bell)
-        job, _ = self._sampler_run([(circ)], backend_name, wait_completion=sync)
+        job, _ = self._sampler_run([circ], backend_name, wait_completion=sync)
         return job, None
 
     def test_get_jobs(self):

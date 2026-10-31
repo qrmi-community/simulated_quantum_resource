@@ -688,7 +688,7 @@ class Job(BaseModel):
         description="ID of the program.",
         min_length=1,
         max_length=256,
-        examples=["sampler", "estimator"],
+        examples=["sampler", "estimator", "executor"],
     )
 
     log_level: Literal["debug", "info", "warning", "error", "critical"] = Field(
@@ -775,7 +775,7 @@ class JobResponse(BaseModel):
         description="ID of the program.",
         min_length=1,
         max_length=256,
-        examples=["sampler", "estimator"],
+        examples=["sampler", "estimator", "executor"],
     )
 
     status: Literal["Running", "Completed", "Cancelled", "Failed"] = Field(

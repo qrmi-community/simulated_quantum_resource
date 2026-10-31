@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for QSAService"""
+
 import os
 import time
 from abc import ABC

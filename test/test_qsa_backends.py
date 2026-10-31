@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for QSAService"""
+
 import logging
 
 from qiskit import QuantumCircuit
@@ -152,7 +153,7 @@ class QSABackendsTest(QSASTestBase):
                 coupling_map=backend_config["coupling_map"],
             )
             circ = pm.run(hadamard)
-            _, result = self._sampler_run([(circ)], backend_name)
+            _, result = self._sampler_run([circ], backend_name)
 
             self.assertIsInstance(result, PrimitiveResult)
             self.assertIsInstance(result.metadata, dict)
