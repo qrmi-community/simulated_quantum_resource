@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for QSAService"""
+
 import json
 import logging
 from typing import Any, Dict, List

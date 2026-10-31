@@ -11,6 +11,7 @@
 # that they have been altered from the originals.
 
 """Tests for QSAService"""
+
 import json
 import logging
 from typing import Any, Dict, List
@@ -148,7 +149,7 @@ class QSASamplerTest(QSASTestBase):
             bell, _, target = self._cases[1]
             bell = self._pm.run(bell)
 
-            result = self._sampler_run([(bell)])
+            result = self._sampler_run([bell])
 
             self.assertIsInstance(result, PrimitiveResult)
             self.assertIsInstance(result.metadata, dict)
@@ -197,12 +198,12 @@ class QSASamplerTest(QSASTestBase):
         bell, _, _ = self._cases[1]
 
         bell = self._pm.run(bell)
-        _ = self._sampler_run([(bell)])
+        _ = self._sampler_run([bell])
 
-        result1 = self._sampler_run([(bell)])
+        result1 = self._sampler_run([bell])
         meas1 = result1[0].data.meas
 
-        result2 = self._sampler_run([(bell)])
+        result2 = self._sampler_run([bell])
         meas2 = result2[0].data.meas
 
         self._assert_allclose(meas1, meas2, rtol=0)
@@ -566,7 +567,7 @@ class QSASamplerTest(QSASTestBase):
         bell, _, target = self._cases[1]
         bell = self._pm.run(bell)
 
-        result = self._sampler_run([(bell)], use_qasm3=False)
+        result = self._sampler_run([bell], use_qasm3=False)
 
         self.assertIsInstance(result, PrimitiveResult)
         self.assertIsInstance(result.metadata, dict)

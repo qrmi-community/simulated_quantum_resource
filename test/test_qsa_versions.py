@@ -14,6 +14,7 @@ import unittest
 from fastapi.testclient import TestClient
 from qsa_sim.api import app
 
+
 class QSAVersionsTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
