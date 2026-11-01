@@ -78,8 +78,8 @@ S3_REGION=us-east
 
 | Variable | Description |
 | --- | --- |
-| `QSASIM_IAM_APIKEY` | IAM API key accepted by the simulator's `/identity/token` endpoint, in addition to the keys listed under `auth.iam_apikeys` in `config.yaml`. Set this to the same value your QRMI configuration uses for `QRMI_IBM_QRS_IAM_APIKEY`. |
-| `QSASIM_SERVICE_CRN` | The `Service-CRN` value the simulator expects on incoming requests (overrides `service_crn` in `config.yaml`). Should match `QRMI_IBM_QRS_SERVICE_CRN` on the client/QRMI side. |
+| `QSASIM_IAM_APIKEY` | IAM API key accepted by the simulator's `/identity/token` endpoint, in addition to the keys listed under `auth.iam_apikeys` in `config.yaml`. Set this to the same value your QRMI configuration uses for `QRMI_IBM_QS_IAM_APIKEY`. |
+| `QSASIM_SERVICE_CRN` | The `Service-CRN` value the simulator expects on incoming requests (overrides `service_crn` in `config.yaml`). Should match `QRMI_IBM_QS_SERVICE_CRN` on the client/QRMI side. |
 | `QSASIM_BIND_PORT` | Port the API simulator listens on, and the host port it's mapped to by `docker-compose.yml`. Overrides `port` in `config.yaml`. |
 | `PYTHONUNBUFFERED` | Disables Python's stdout/stderr buffering so simulator logs appear immediately in `docker compose logs` instead of being buffered. |
 | `S3_ACCESS_KEY` | Access key for the RustFS S3-compatible storage used to exchange job inputs, outputs, and logs (via presigned URLs) between QRMI and the simulator. |
