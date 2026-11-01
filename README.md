@@ -137,8 +137,8 @@ On each Slurm node that will run quantum jobs, define the resource in `/etc/slur
 | `QRMI_IBM_QS_IAM_ENDPOINT` | `http://<host>:${QSASIM_BIND_PORT}` | `QSASIM_BIND_PORT` (the simulator serves `/identity/token` on the same port) |
 | `QRMI_IBM_QS_IAM_APIKEY` | `myapikey` | `QSASIM_IAM_APIKEY` |
 | `QRMI_IBM_QS_SERVICE_CRN` | `myinstance` | `QSASIM_SERVICE_CRN` |
-| `QRMI_IBM_QS_AWS_ACCESS_KEY_ID` | `bbFJoygjrP5BdqnQ` | `S3_ACCESS_KEY` |
-| `QRMI_IBM_QS_AWS_SECRET_ACCESS_KEY` | `CAMHACH4bFlr0R2E` | `S3_SECRET_KEY` |
+| `QRMI_IBM_QS_AWS_ACCESS_KEY_ID` | `myaccesskey` | `S3_ACCESS_KEY` |
+| `QRMI_IBM_QS_AWS_SECRET_ACCESS_KEY` | `mysecretkey` | `S3_SECRET_KEY` |
 | `QRMI_IBM_QS_S3_ENDPOINT` | `http://<host>:${S3_PORT}` | `S3_PORT` |
 | `QRMI_IBM_QS_S3_BUCKET` | `mybucket` | `S3_BUCKET_NAME` |
 | `QRMI_IBM_QS_S3_REGION` | `us-east` | `S3_REGION` |
