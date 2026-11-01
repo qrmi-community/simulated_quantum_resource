@@ -1,0 +1,68 @@
+name: Python Tests
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: .
+
+jobs:
+  verify-qs-python:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Display Python version
+      run: python -c "import sys; print(sys.version)"
+
+    - name: Checkout qsa_sim
+      uses: actions/checkout@v4
+      with:
+        repository: qrmi-community/simulated_quantum_resource
+        ref: main
+        path: simulated_quantum_resource
+
+    - name: Setup qsa_sim
+      working-directory: simulated_quantum_resource
+      run: |
+         python -m pip install --upgrade pip
+         pip install -e ".[dev]"
+
+    - name: Lint with pylint
+      working-directory: simulated_quantum_resource
+      run: |
+        pylint qsa_sim
+
+    - name: Lint with black
+      working-directory: simulated_quantum_resource
+      run: |
+        black --check qsa_sim
+
+    - name: Start qsa_sim
+      working-directory: simulated_quantum_resource
+      run: ./run.sh config.yaml
+
+    - name: Test with pytest
+      working-directory: simulated_quantum_resource
+      run: |
+        pytest
+
+    - name: Check readiness of qsa_sim
+      run: curl -v -fsS --retry 30 --retry-delay 2 --retry-connrefused http://0.0.0.0:8290/versions
+
+    - name: Stop qsa_sim
+      working-directory: simulated_quantum_resource
+      run: ./stop.sh
