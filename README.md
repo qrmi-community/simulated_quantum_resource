@@ -5,6 +5,7 @@
 ![Platform](https://img.shields.io/badge/%F0%9F%92%BB_Platform-Linux%20%7C%20macOS%20%7C%20Windows-blue)
 [![CI](https://github.com/qrmi-community/simulated_quantum_resource/actions/workflows/python.yaml/badge.svg)](https://github.com/qrmi-community/simulated_quantum_resource/actions/workflows/python.yaml)
 [![DOI](https://zenodo.org/badge/1335559073.svg)](https://doi.org/10.5281/zenodo.23907471)
+![Python versions](https://img.shields.io/badge/Python-3.11%20to%203.14-blue)
 
 *A local, offline stand-in for the IBM Quantum System API, used to validate QRMI and its workload manager plugin (e.g., Slurm's SPANK plugin, PBS Hooks, LSF esub) without real quantum hardware.*
 
